@@ -17,7 +17,7 @@ while True:
         b = bytes(userinput, 'utf-8')
         uart.write(b)
         continue
-    byte_read = uart.readline()# read up to 32 bytes
+    byte_read = uart.readline()# read one line
     if byte_read != None:
         allstring += byte_read.decode()
         printshow = True
