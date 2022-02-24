@@ -13,4 +13,4 @@ Usage Code.py:
 5) See console on receiver to confirm that the byte is received
 
 
-Usage Code-Sender.py & Code-Receiver.py description in the comment
+Usage Code-text sender.py & Code-text receiver.py description in the comment
