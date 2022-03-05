@@ -12,4 +12,5 @@ Usage Code.py:
       AT+TEST=TXLRPKT, "AA:
 5) See console on receiver to confirm that the byte is received
 6) Usage of Code-text sender.py & Code-text receiver.py description in the comment
-7) Code-receiver-MQTT.py is example how to receive LORA P2P and then send the variable thru MQTT broker over TDP port 1883. using wifi esp8266 shield. 
+7) Code-sensor-receiver.py and code-sesnsor-sender.py is examples how to send sensor data
+8) Code-receiver-MQTT.py is example how to receive LORA P2P and then send the variable thru MQTT broker over TDP port 1883. using wifi esp8266 shield. 
