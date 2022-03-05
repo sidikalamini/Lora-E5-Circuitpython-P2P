@@ -1,0 +1,150 @@
+import time
+from microcontroller import cpu
+import board
+import digitalio
+import busio
+import binascii
+import sys
+import re
+import adafruit_ssd1306
+import adafruit_requests as requests
+from adafruit_espatcontrol import adafruit_espatcontrol
+from adafruit_espatcontrol import adafruit_espatcontrol_wifimanager
+import adafruit_espatcontrol.adafruit_espatcontrol_socket as socket
+import adafruit_minimqtt.adafruit_minimqtt as MQTT
+import json
+
+
+# Get wifi details and more from a secrets.py file
+try:
+    from secrets import secrets
+except ImportError:
+    print("All secret keys are kept in secrets.py, please add them there!")
+    raise
+
+# mula penggunaan UART UART connection to the ESP8266 WiFi Module.
+wifiUart = busio.UART(board.GP16, board.GP17, receiver_buffer_size=2048)  # Use large buffer as we're not using hardware flow control.
+esp = adafruit_espatcontrol.ESP_ATcontrol(wifiUart, 9600, debug=False)
+wifi = adafruit_espatcontrol_wifimanager.ESPAT_WiFiManager(esp, secrets)
+
+# mendefinisikan penggunaan UART
+
+uart = busio.UART(board.GP4, board.GP5, baudrate=9600, receiver_buffer_size = 2048)
+
+# Mendefinisikan I2C untuk OLED
+LCD_SDA = board.GP2
+LCD_SCL = board.GP3
+i2c = busio.I2C(scl=LCD_SCL, sda=LCD_SDA)
+oled = adafruit_ssd1306.SSD1306_I2C(128, 64, i2c)
+
+
+# Setup a feed named `testfeed` for publishing.
+default_topic = "/environment/environment"
+# Define callback functions which will be called when certain events happen.
+def connected(client, userdata, flags, rc):
+    print("Connected to MQTT broker! Listening for topic changes on %s" % default_topic)
+    client.subscribe(default_topic)
+
+def disconnected(client, userdata, rc):
+    print("Disconnected from MQTT Broker!")
+
+def message(client, topic, message):
+    print("New message on topic {0}: {1}".format(topic, message))
+
+# Connect to WiFi
+print("Connecting to WiFi...")
+wifi.connect()
+print("Connected!")
+
+MQTT.set_socket(socket, esp)
+
+# Initialize a new MQTT Client object
+mqtt_client = MQTT.MQTT(
+    broker=secrets["mqtt_broker"],
+    username=secrets["mqtt_username"],
+    password=secrets["mqtt_password"],
+    port=secrets["mqtt_port"],
+
+)
+
+mqtt_topic = "/environment/environment"
+# Setup the callback methods above
+mqtt_client.on_connect = connected
+mqtt_client.on_disconnect = disconnected
+mqtt_client.on_message = message
+
+# Connect the client to the MQTT broker.
+mqtt_client.connect(  )
+
+print("Subscribing to %s" % mqtt_topic)
+mqtt_client.subscribe(mqtt_topic)
+
+print("Publishing to %s" % mqtt_topic)
+mqtt_client.publish(mqtt_topic, "Hello Broker!")
+
+print("Unsubscribing from %s" % mqtt_topic)
+mqtt_client.unsubscribe(mqtt_topic)
+
+print("Disconnecting from %s" % mqtt_client.broker)
+#mqtt_client.disconnect()
+
+message_started = False
+message_print = []
+allstring = ""
+printshow = False
+
+# Mula Loop
+# Setup AT+TEST=RXLRPKT
+uart.write(bytes("AT+MODE=TEST", "utf-8"))
+print("Checking.. AT+MODE=TEST"
+ AT+TEST=RXLRPKT")
+while uart.readline():
+    print(uart.readline())
+
+#mqtt_client.connect(  )
+while True:
+    try:
+        byte_read = uart.readline()  # read up to 32 bytes
+        if byte_read:
+            allstring += byte_read.decode()
+            printshow = True
+        else:
+            if printshow:
+                if allstring:
+                    left = '"3C'
+                    right = '3E"'
+                    dataRead = re.search(
+                        r"" + left + "(.*?)" + right + "", allstring
+                    ).group(1)
+                    clearstring = binascii.unhexlify(dataRead).decode("utf8")
+                    print(clearstring)
+                    letter_list = clearstring.split(",")
+                    temperature = letter_list[0]
+                    humidity = letter_list[1]
+                    co2 = letter_list[2]
+                    oled.fill(0)
+                    #Lukis segiempat sama
+                    oled.rect(10, 10, oled.width-10, oled.height-10, True)     
+                    #paparkan pada OLED
+                    oled.text("Demo RX Receiving",20,20,1)
+                    oled.text("CO2      :" +co2, 20, 30,1)
+                    oled.text("Temp     :"+temperature, 20, 40, 1)
+                    oled.text("Humidity :"+humidity, 20, 50, 1)
+                    oled.show()
+                    print("Publishing to %s" % mqtt_topic)
+                    brokers_out={"CO2":co2,
+                                "Temp":temperature,
+                                "Humidity":humidity
+                                }
+                    data_out=json.dumps(brokers_out)
+                    mqtt_client.publish(mqtt_topic, data_out)
+                allstring = ""
+                printshow = False
+    except ValueError as e:
+        # print(e)
+        continue
+    except AttributeError as ea:
+        # print(ea)
+        continue
+    except KeyboardInterrupt:
+        sys.exit()
