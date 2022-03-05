@@ -1,3 +1,4 @@
+# This example extend code-sensor-receiver and add function to send variables thru MQTT using esp-atcontrol (wifi esp8266) 
 import time
 from microcontroller import cpu
 import board
