@@ -28,7 +28,7 @@ wifiUart = busio.UART(board.GP16, board.GP17, receiver_buffer_size=2048)  # Use 
 esp = adafruit_espatcontrol.ESP_ATcontrol(wifiUart, 9600, debug=False)
 wifi = adafruit_espatcontrol_wifimanager.ESPAT_WiFiManager(esp, secrets)
 
-# mendefinisikan penggunaan UART
+# mendefinisikan penggunaan UART untuk LORA-E5
 
 uart = busio.UART(board.GP4, board.GP5, baudrate=9600, receiver_buffer_size = 2048)
 
@@ -94,7 +94,6 @@ message_print = []
 allstring = ""
 printshow = False
 
-# Mula Loop
 # Setup AT+TEST=RXLRPKT
 uart.write(bytes("AT+MODE=TEST", "utf-8"))
 print("Checking.. AT+MODE=TEST"
@@ -102,10 +101,11 @@ print("Checking.. AT+MODE=TEST"
 while uart.readline():
     print(uart.readline())
 
-#mqtt_client.connect(  )
+
+# Mula Loop
 while True:
     try:
-        byte_read = uart.readline()  # read up to 32 bytes
+        byte_read = uart.readline()  # baca satu baris dari LORA-E5
         if byte_read:
             allstring += byte_read.decode()
             printshow = True
@@ -117,27 +117,33 @@ while True:
                     dataRead = re.search(
                         r"" + left + "(.*?)" + right + "", allstring
                     ).group(1)
+                    # tukar dari HEX ke String
                     clearstring = binascii.unhexlify(dataRead).decode("utf8")
                     print(clearstring)
+                    # buat list, Asingkan dengan ","
                     letter_list = clearstring.split(",")
                     temperature = letter_list[0]
                     humidity = letter_list[1]
                     co2 = letter_list[2]
+                    # mula paparan OLED
                     oled.fill(0)
-                    #Lukis segiempat sama
+                    # Lukis segiempat sama
                     oled.rect(10, 10, oled.width-10, oled.height-10, True)     
-                    #paparkan pada OLED
+                    # paparkan pada OLED
                     oled.text("Demo RX Receiving",20,20,1)
                     oled.text("CO2      :" +co2, 20, 30,1)
                     oled.text("Temp     :"+temperature, 20, 40, 1)
                     oled.text("Humidity :"+humidity, 20, 50, 1)
                     oled.show()
                     print("Publishing to %s" % mqtt_topic)
+                    # formatkan dalam string
                     brokers_out={"CO2":co2,
                                 "Temp":temperature,
                                 "Humidity":humidity
                                 }
+                    # format dalam JSON
                     data_out=json.dumps(brokers_out)
+                    # hantar JSON ke MQTT
                     mqtt_client.publish(mqtt_topic, data_out)
                 allstring = ""
                 printshow = False
