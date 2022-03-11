@@ -14,7 +14,8 @@ LCD_SCL = board.GP27
 i2c = busio.I2C(scl=LCD_SCL, sda=LCD_SDA)
 
 
-# i2c = board.I2C() # untuk seeeduino, tidak perlu definisi I2C
+# i2c = board.I2C() # for seeeduino, no need I2C pin definition
+
 uart = busio.UART(board.GP0, board.GP1, baudrate=9600)
 get_input = True
 message_started = False
@@ -58,8 +59,8 @@ at_send_check_response("Set AT+JOIN",10,"AT+JOIN")
 
 while True:    
     scd = adafruit_scd30.SCD30(i2c)
-    if scd.temperature != None: # Formatkan sekiranya ada bacaan sensor sahaja
-            #Formatkan kepada dua titik perpuluhan
+    if scd.temperature != None: # format if there is sensor reading only
+            #Formatkan to two decimal point
             temperature = "{:.2f}".format(scd.temperature)
             relative_humidity = "{:.2f}".format(scd.relative_humidity)
             co2_ppm_level = "{:.2f}".format(scd.CO2)
