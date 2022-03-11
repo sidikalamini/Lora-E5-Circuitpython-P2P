@@ -14,3 +14,4 @@ Usage Code.py:
 6) Usage of code-text-sender.py & code-text-receiver.py in the comment, used to send full text string. we are using binascii hexlify and unhexlify 
 7) code-sensor-receiver.py and code-sensor-sender.py is an example how to send sensor data thru P2P LORA-E5
 8) code-receiver-MQTT.py is an example how to receive LORA P2P and then send the variable thru MQTT broker over TDP port 1883. Using wifi esp8266 shield. 
+9) Create code-LORAWAN-TTN-sendsensordata.py is example how to send sensor data to The Things Network LORAWAN.
