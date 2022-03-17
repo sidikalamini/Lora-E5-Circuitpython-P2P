@@ -12,9 +12,13 @@ import binascii
 
 
 #mendefinisikan penggunaan i2C
-i2c = board.I2C()
+# fro maker nano RP2040, need to define whihc GPIO pins
+LCD_SDA = board.GP12
+LCD_SCL = board.GP13
+i2c = busio.I2C(scl=LCD_SCL, sda=LCD_SDA)
+# i2c = board.I2C() # for seeeduino xiao I2C pin is built in, no need to define port
 #mendefinisikan penggunaan UART
-uart = busio.UART(board.D6, board.D7, baudrate=9600)
+uart = busio.UART(board.GP1, board.GP0, baudrate=9600)
 #mendefisikan objek oled
 oled = adafruit_ssd1306.SSD1306_I2C(128, 64, i2c)
 get_input = True
